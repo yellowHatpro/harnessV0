@@ -22,6 +22,7 @@ pub trait Model {
 
 pub enum StopReason {
     ToolCall,
+    EndTurn
 }
 
 // Starting with OpenAI. Plan is to use Codex
@@ -32,10 +33,20 @@ pub struct OpenAIModel {
 
 impl Model for OpenAIModel {
     fn invoke(&self, task: &Task) -> Result<ModelOutput, String> {
-        // a dummy response for now
-        Ok(ModelOutput {
-            id: "resp_123".to_string(),
+        let has_tool_result =
+            task.messages.iter().any(|message| message.role == "tool");
 
+        if has_tool_result {
+            return Ok(ModelOutput {
+                id: "resp1".to_string(),
+                content: vec![ModelContent::Text(
+                    format!("Got the tool: {} output", "shell")
+                )],
+                stop_reason: StopReason::EndTurn,
+            })
+        }
+        Ok(ModelOutput {
+            id: "resp_2".to_string(),
             content: vec![
                 ModelContent::ToolCall {
                     id: "call_456".to_string(),
